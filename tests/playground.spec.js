@@ -18,7 +18,7 @@ test('real GPU results paint native OpaqueRanges and editing remains live', asyn
   await expect(page.locator('#code')).toHaveValue('');
   await expect(page.locator('#code')).toBeFocused();
   expect(await ranges(page)).toEqual([]);
-  await expect(page.locator('button, select, footer, aside')).toHaveCount(0);
+  await expect(page.locator('button, select, aside')).toHaveCount(0);
   await page.keyboard.type('const first = 42;', { delay: 50 });
   await ready(page);
   expect((await ranges(page)).length).toBeGreaterThan(0);

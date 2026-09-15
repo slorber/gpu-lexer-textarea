@@ -23,6 +23,9 @@ header p { max-width: 76ch; margin: 0; color: #aeb9bf; font-size: 15px; line-hei
 header a { color: #c8e5a0; font-size: 20px; font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 a:focus-visible { outline: 2px solid #b8ce94; outline-offset: 4px; }
 header .requirements { margin-top: 12px; color: #8b999f; font-size: 12px; }
+footer { margin-top: 16px; text-align: right; font: 13px/1.5 system-ui, sans-serif; }
+footer a { color: #aeb9bf; text-underline-offset: 3px; }
+footer a:hover { color: #c8e5a0; }
 
 textarea {
   display: block;
