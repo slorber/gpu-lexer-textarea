@@ -76,7 +76,8 @@ test('selection, IME, scrolling and native undo', async ({ page }) => {
     code.value = 'const 日本語 = "こんにちは 🌍";';
     code.dispatchEvent(new InputEvent('input', { isComposing: true }));
   });
-  expect(await ranges(page)).toEqual([]);
+  // Composition retains the existing highlights until a fresh result arrives.
+  expect((await ranges(page)).length).toBeGreaterThan(0);
   await page.locator('#code').dispatchEvent('compositionend');
   await ready(page);
   expect((await ranges(page)).length).toBeGreaterThan(0);
@@ -160,4 +161,59 @@ test('worker failures are reported and leave editing available', async ({ page }
   await expect(page.locator('#notice')).toContainText('gpu-lexer could not start or run');
   await page.locator('#code').fill('Editable after GPU failure');
   await expect(page.locator('#code')).toHaveValue('Editable after GPU failure');
+});
+
+test('live ranges remain visible during edits and composition while inference is pending', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.Worker = class {
+      constructor() { window.controlledWorker = this; this.requests = []; }
+      postMessage(request) { this.requests.push(request); }
+      terminate() {}
+      reply(index, spans) { this.onmessage({ data: { id: this.requests[index].id, spans } }); }
+    };
+  });
+  await page.goto('/');
+  await page.locator('#code').fill('const message = "hello";');
+  await expect.poll(() => page.evaluate(() => window.controlledWorker.requests.length)).toBe(1);
+  await page.evaluate(() => {
+    window.controlledWorker.reply(0, [
+      { type: 'keyword', start: 0, end: 5 },
+      { type: 'string', start: 16, end: 23 },
+    ]);
+    window.originalKeywordRange = [...CSS.highlights.get('syntax-keyword')][0];
+    document.querySelector('#code').setSelectionRange(0, 0);
+  });
+  await ready(page);
+  // Hold all subsequent GPU responses, so a fast inference cannot mask a flicker.
+  await page.keyboard.insertText('  ');
+  await expect.poll(() => page.evaluate(() => window.controlledWorker.requests.length)).toBe(2);
+  expect(await ranges(page)).toEqual([
+    { name: 'syntax-string', kind: 'OpaqueRange', start: 18, end: 25 },
+    // Insertion exactly at the start is included in Chrome's live range.
+    { name: 'syntax-keyword', kind: 'OpaqueRange', start: 0, end: 7 },
+  ]);
+  expect(await page.evaluate(() => [...CSS.highlights.get('syntax-keyword')][0] === window.originalKeywordRange)).toBe(true);
+
+  await page.locator('#code').press('Backspace');
+  expect((await ranges(page)).find(range => range.name === 'syntax-keyword')).toMatchObject({ start: 0, end: 6 });
+  await page.locator('#code').dispatchEvent('compositionstart');
+  await page.keyboard.insertText('日');
+  expect((await ranges(page)).find(range => range.name === 'syntax-keyword')).toMatchObject({ start: 0, end: 7 });
+  await page.locator('#code').dispatchEvent('compositionend');
+
+  // This response predates the deletion and composition and must be discarded.
+  await page.evaluate(() => window.controlledWorker.reply(1, [{ type: 'number', start: 0, end: 1 }]));
+  await expect.poll(() => page.evaluate(() => window.controlledWorker.requests.length)).toBe(3);
+  expect((await ranges(page)).some(range => range.name === 'syntax-number')).toBe(false);
+  expect(await page.evaluate(() => [...CSS.highlights.get('syntax-keyword')][0] === window.originalKeywordRange)).toBe(true);
+  await page.evaluate(() => window.controlledWorker.reply(2, [
+    { type: 'keyword', start: 2, end: 7 },
+    { type: 'string', start: 18, end: 25 },
+  ]));
+  await ready(page);
+  expect(await page.evaluate(() => [...CSS.highlights.get('syntax-keyword')][0] === window.originalKeywordRange)).toBe(false);
+  expect((await ranges(page)).length).toBe(2);
+
+  await page.locator('#code').fill('');
+  expect(await ranges(page)).toEqual([]);
 });

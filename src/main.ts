@@ -10,7 +10,7 @@ let revision = 0;
 let inFlight: ParseRequest | undefined;
 let dirty = false;
 let composing = false;
-let timer: ReturnType<typeof setTimeout> | undefined;
+let frame: number | undefined;
 let timeout: ReturnType<typeof setTimeout> | undefined;
 
 function clearHighlights() {
@@ -19,7 +19,7 @@ function clearHighlights() {
 
 function fail(message: string) {
   clearTimeout(timeout);
-  clearTimeout(timer);
+  if (frame !== undefined) cancelAnimationFrame(frame);
   worker?.terminate();
   worker = undefined;
   inFlight = undefined;
@@ -44,7 +44,8 @@ function paint(spans: SyntaxSpan[]) {
 }
 
 function dispatch() {
-  clearTimeout(timer);
+  if (frame !== undefined) cancelAnimationFrame(frame);
+  frame = undefined;
   if (!worker || composing || inFlight || !dirty) return;
   dirty = false;
   const code = textarea.value;
@@ -62,17 +63,18 @@ function dispatch() {
 function schedule() {
   revision++;
   dirty = true;
-  clearTimeout(timer);
-  // OpaqueRanges refer to a value snapshot; clear them when the value changes.
-  clearHighlights();
+  // Chrome updates live OpaqueRange offsets as text is edited. Keep their
+  // colors visible until paint() replaces them with the latest GPU result.
+  if (!textarea.value) clearHighlights();
   if (worker && !composing) {
     textarea.dataset.state = 'loading';
-    timer = setTimeout(dispatch, 40);
+    // Coalesce edits within a frame without waiting for typing to stop.
+    frame ??= requestAnimationFrame(dispatch);
   }
 }
 
 textarea.addEventListener('input', schedule);
-textarea.addEventListener('compositionstart', () => { composing = true; revision++; clearHighlights(); });
+textarea.addEventListener('compositionstart', () => { composing = true; revision++; });
 textarea.addEventListener('compositionend', () => { composing = false; schedule(); });
 
 if (!window.isSecureContext) {
@@ -123,7 +125,7 @@ if (!window.isSecureContext) {
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     worker?.terminate();
-    clearTimeout(timer);
+    if (frame !== undefined) cancelAnimationFrame(frame);
     clearTimeout(timeout);
     for (const type of syntaxTypes) CSS.highlights?.delete(`syntax-${type}`);
   });
