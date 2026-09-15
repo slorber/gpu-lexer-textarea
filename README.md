@@ -2,6 +2,10 @@
 
 A demo of live syntax highlighting inside a plain HTML `<textarea>`. Start with an empty input, type or paste code in any language, and watch it get colored.
 
+[Demo Playground](https://github.com/slorber/gpu-lexer-textarea)
+
+---
+
 ![Native textarea highlighting TypeScript and Rust](docs/screenshot.png)
 
 ## The idea
