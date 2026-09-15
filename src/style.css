@@ -1,0 +1,65 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  background: #151a1e;
+  color: #e1e5e7;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; padding: clamp(24px, 5dvh, 48px) 20px; }
+main {
+  /* Match the textarea's font so 80ch means 80 monospace columns.
+     The extra 50px accounts for its padding and border. */
+  font: 18px/1.65 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  width: 100%;
+  max-width: calc(80ch + 50px);
+  margin-inline: auto;
+}
+header { font-family: system-ui, sans-serif; margin-bottom: 24px; }
+h1 { font-size: clamp(24px, 3.5vw, 34px); font-weight: 600; line-height: 1.2; letter-spacing: -.8px; margin: 0 0 14px; }
+header p { max-width: 76ch; margin: 0; color: #aeb9bf; font-size: 15px; line-height: 1.65; }
+#description { margin: 0; padding-left: 24px; color: #aeb9bf; font-size: 17px; line-height: 1.7; }
+#description li + li { margin-top: 4px; }
+header a { color: #c8e5a0; font-size: 20px; font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid #b8ce94; outline-offset: 4px; }
+header .requirements { margin-top: 12px; color: #8b999f; font-size: 12px; }
+
+textarea {
+  display: block;
+  width: 100%;
+  height: clamp(280px, 58dvh, 560px);
+  padding: 24px;
+  border: 1px solid #39444a;
+  border-radius: 8px;
+  outline: none;
+  resize: none;
+  background: #1c2227;
+  color: inherit;
+  caret-color: #e1e5e7;
+  font: inherit;
+  font-variant-ligatures: none;
+  tab-size: 2;
+}
+
+textarea:focus-visible { border-color: #71836b; }
+
+textarea::placeholder { color: #99a6a9; }
+textarea::selection { background: #53718688; color: inherit; }
+::highlight(syntax-comment) { color: #99a6a9; }
+::highlight(syntax-string) { color: #b8ce94; }
+::highlight(syntax-number) { color: #e9b985; }
+::highlight(syntax-keyword) { color: #cbb0e8; }
+::highlight(syntax-type) { color: #8dcbc9; }
+::highlight(syntax-function) { color: #e3d29b; }
+::highlight(syntax-constant) { color: #e4a598; }
+::highlight(syntax-operator) { color: #a9c7e1; }
+
+#notice {
+  margin: 0 0 16px;
+  padding: 12px 24px;
+  background: #3b3024;
+  color: #f2d6ac;
+  font-size: 13px;
+  line-height: 1.5;
+  border-radius: 8px;
+}

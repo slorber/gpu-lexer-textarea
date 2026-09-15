@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#151a1e" />
+    <meta name="description" content="Type code into an empty textarea and highlight it live with gpu-lexer and OpaqueRange." />
+    <title>Textarea syntax highlighting</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Syntax highlighting. In a textarea.</h1>
+        <ul id="description">
+          <li><a href="https://x.com/shuding/status/2097348783415939541" target="_blank" rel="noreferrer">gpu-lexer</a> — syntax detection on the GPU.</li>
+          <li><a href="https://olliewilliams.xyz/blog/opaquerange/" target="_blank" rel="noreferrer">OpaqueRange</a> — native textarea highlighting.</li>
+        </ul>
+        <p class="requirements">Chrome 152+ · WebGPU</p>
+      </header>
+      <p id="notice" role="status" hidden></p>
+      <textarea id="code" aria-label="Code to highlight" aria-describedby="description" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" placeholder="Type or paste code…" autofocus></textarea>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
